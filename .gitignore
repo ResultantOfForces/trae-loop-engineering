@@ -16,3 +16,6 @@ Desktop.ini
 *.log
 tmp/
 .cache/
+
+# Eval workspace (forward-test scratch artifacts, recorded outputs, subagent logs)
+evals-workspace/

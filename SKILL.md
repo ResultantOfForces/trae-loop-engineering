@@ -1,9 +1,58 @@
 ---
 name: trae-loop-engineering
-description: Use when a substantial coding, research, content, or long-running project needs structured loop orchestration in TRAE with six-interface contracts (goal/state/context/act/capture/stop), route tiers (T0-T5; dual plan-review via Task subagents at T3+), artifact-first handoffs (00-brief through 50-final-report), evidence-based arbitration, stop rules, and user checkpoints. Appropriate for deep refactors, large feature development, architecture-affecting fixes, multi-file migrations, research synthesis, or any task where a single-pass plan is likely to miss edge cases and independent critique reduces risk. The main agent acts as manager/planner/executor/arbitrator; Task subagents provide independent second plans and read-only reviews at T3+. Supports file-based memory (loop-state.md), cross-session resume, auto-iteration with TRAE auto-run, and hybrid dual (same-model auto default, cross-model manual upgrade for high-risk). Do not use for tiny edits, config tweaks, docs-only notes, or simple local bug fixes.
+description: Use when a substantial coding, research, content, or long-running project needs structured loop orchestration in TRAE with six-interface contracts (goal/state/context/act/capture/stop), route tiers (T0-T5; dual plan-review via Task subagents at T3+), artifact-first handoffs (00-brief through 50-final-report), evidence-based arbitration, stop rules, and user checkpoints. The main agent acts as manager/planner/executor/arbitrator; Task subagents provide independent second plans and read-only reviews at T3+. Supports file-based memory (loop-state.md), cross-session resume, auto-iteration with TRAE auto-run, and hybrid dual (same-model auto default, cross-model manual upgrade for high-risk). Do not use for tiny edits, config tweaks, docs-only notes, or simple local bug fixes.
+license: MIT
+compatibility:
+  - trae-work
+  - trae-cli
+metadata:
+  version: 1.1.0
+  min-trae-version: "2025.1"
+  tags:
+    - loop-engineering
+    - multi-agent
+    - artifact-driven
+    - code-review
+    - refactoring
+allowed-tools:
+  - Task
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+  - RunCommand
 ---
 
 # TRAE Loop Engineering
+
+## Table of Contents
+
+1. [Purpose](#purpose)
+2. [TRAE Adaptation Boundary](#trae-adaptation-boundary)
+3. [TRAE Capability Facts](#trae-capability-facts)
+4. [Quick Start / Decision Gate](#quick-start--decision-gate)
+5. [Planning-Execution Firewall](#planning-execution-firewall)
+6. [Route Tiers](#route-tiers)
+7. [Admission Gates](#admission-gates)
+8. [Six-Interface Contract](#six-interface-contract)
+9. [Strategy, Tactical, Execution Layers](#strategy-tactical-execution-layers)
+10. [Execution Batch Sizing](#execution-batch-sizing)
+11. [Artifact Protocol](#artifact-protocol)
+12. [File-Based Memory And Resume](#file-based-memory-and-resume)
+13. [TRAE Memory, Rules, and MCP Integration](#trae-memory-rules-and-mcp-integration)
+14. [The Workflow](#the-workflow)
+15. [Quick Arbitration Output](#quick-arbitration-output)
+16. [Subagent Dual Plan/Review](#subagent-dual-planreview)
+17. [Hybrid Dual](#hybrid-dual)
+18. [Stop Rules](#stop-rules)
+19. [Evidence Standards](#evidence-standards)
+20. [Auto-Iteration](#auto-iteration)
+21. [User Checkpoints](#user-checkpoints)
+22. [Skill Promotion](#skill-promotion)
+23. [Roles](#roles)
+24. [Common Mistakes](#common-mistakes)
+25. [Resources](#resources)
 
 ## Purpose
 
@@ -71,6 +120,19 @@ Loop engineering means choosing the cheapest process that still controls the fai
 
 Default to T0/T1/T2. T0-T2 run single-agent with self-constraint. T3+ dispatches Task subagents for dual plan/review and requires a short justification: what risk does the heavier route reduce?
 
+## Admission Gates
+
+Before starting a full loop (T3+), answer:
+
+1. Is this worth the token spend for the expected value?
+2. Is it complex or risky enough for more than a current-thread checklist?
+3. What breaks if one agent handles it?
+4. What is the cheapest route that controls that failure mode?
+5. What is the max budget, max rounds, and stop condition?
+6. What evidence proves done?
+
+Dispatch a Task subagent only when it has most of: independent success/failure criteria; fixed output artifact; persistent context need; clear write scope; separable context boundary; meaningful risk, budget, quality, or coordination value. Otherwise keep it as a current-thread section, checklist, or one-off subtask.
+
 ## Six-Interface Contract
 
 Before starting T2 or higher, define:
@@ -98,11 +160,25 @@ Execution plan answers: source strategy/tactical artifacts; write scope; tasks g
 
 If the strategic target is absent, write `strategy-gap: <missing decision>` and do not start tactical or execution planning.
 
-For T3/T4, the strategic plan and operational contract live together as a Strategic Loop Contract. Run:
+For T3/T4, the strategic plan and operational contract live together as a Strategic Loop Contract. Validate:
 
+**Windows PowerShell:**
 ```powershell
 powershell -File scripts/validate-loop-contract.ps1 -Path <contract-or-merged-plan.md>
 ```
+
+**macOS/Linux Python 3.8+:**
+```bash
+python3 scripts/validate-loop-contract.py <contract-or-merged-plan.md>
+```
+
+## Execution Batch Sizing
+
+Execution batches should be large enough to land one coherent outcome: a user-visible workflow state, a product surface, a durable data contract, a migration boundary, or a security boundary. Avoid helper-level execution batches that trigger a full dual-review cycle unless they carry security, data-loss, or user-visible regression risk.
+
+Prefer fewer, larger execution phases after a strong strategy/tactical plan. Run full independent review when a stable workflow loop or contract slice lands. During implementation, local tests and execution reports can run without full dual review for every internal patch.
+
+If the user complains that progress is too slow, treat that as a standing batching constraint: the next execution batch must land a substantial user-visible capability, folding safety and hygiene work into it as acceptance criteria.
 
 ## Artifact Protocol
 
@@ -158,6 +234,14 @@ To continue a loop after restart or interruption, send `resume loop <loop_id>` (
 
 Full steps and gap handling: `references/resume-protocol.md`.
 
+## TRAE Memory, Rules, and MCP Integration
+
+TRAE has three capability pillars that interact with loop engineering:
+
+- **Memory**: TRAE's Memory system (persistent preferences, max 20 items, auto-eviction) can store loop preferences — default route tier, subagent_policy tendency, stop-rule strictness. But loop state itself must live in `loop-state.md`, not Memory.
+- **Rules**: TRAE Rules (hard constraints, always loaded) can enforce the planning-execution firewall. If a project requires "all T3+ work must go through dual plan," set it as a Rule rather than restating it each time.
+- **MCP**: MCP Servers provide external tools (Playwright for UI testing, GitHub for PR checks, database connectors for data validation). The loop's capture interface can reference MCP tool output as evidence. MCP tools extend the `act` interface — list available MCP tools in the contract's allowed scope.
+
 ## The Workflow
 
 ### Phase 1: Brief
@@ -190,76 +274,56 @@ Main agent (as arbitrator) writes `40-arbitration.md`, enumerating every P0/P1 f
 ### Phase 8: Final Report
 Write `50-final-report.md` only when stop rules pass: final status, changed files, review findings and dispositions, verification output, artifact paths, git state, residual risks.
 
+## Quick Arbitration Output
+
+For quick arbitration (inline, no full artifact):
+
+```markdown
+**Verdict**
+<short judgment>
+
+**Findings**
+- accept/reject/third path/defer: <claim> — <evidence>
+
+**Next Actions**
+- <fix or record>
+```
+
+For full loop work, create/update artifacts unless the user asks for inline-only work.
+
 ## Subagent Dual Plan/Review
 
-When to dispatch subagents and how to preserve independence:
-
-- T0-T2: single agent, `subagent_policy: not_needed`.
-- T3+: dispatch plan-B subagent for dual plan; dispatch two review subagents for dual review. `subagent_policy: required` for high-risk; `conditional` for uncertain-value consultation.
-- Independence hard rule: a subagent prompt contains only the brief/evidence bundle. It never contains the main agent's conclusions or another subagent's output. The main agent is the first role allowed to compare across plans/reviews.
-- Subagent output is written verbatim into the artifact (only a provenance header added). Do not edit, summarize, or compress it.
-- Subagents are one-shot and cannot be asked follow-ups, so the bundle must be self-contained and accurate. Prefer complete relevant function bodies over ellipses for any logic a subagent may judge.
-
-Full dispatch flow, Task prompt templates, and failure handling: `references/subagent-dispatch.md`.
+T0-T2: single agent, `subagent_policy: not_needed`. T3+: dispatch plan-B and two review subagents; `subagent_policy: required` for high-risk, `conditional` for uncertain-value. Independence hard rule: subagent prompts contain only the brief/evidence bundle, never the main agent's conclusions or other subagents' output. Subagent output is written verbatim into artifacts (only a provenance header added). Full dispatch flow, Task prompt templates, and failure handling: `references/subagent-dispatch.md`.
 
 ## Hybrid Dual
 
-Dual plan/review has two paths, chosen by risk and user decision:
-
-| path | dual_mode | mechanism | when |
-|---|---|---|---|
-| same-model auto (default) | `same_model_auto` | Task subagent, inherits session model, automatic | T3+ default |
-| cross-model manual (upgrade) | `cross_model_manual` | TRAE multi-task with different models, user transports task-packet | high-risk + user decides cross-model independence needed |
-
-Cross-model dual cannot use Task subagents (they inherit the session model). The manual upgrade path: main agent produces A and packs a task-packet (brief + context + headings + independence declaration, no A); user opens a TRAE multi-task with a different model, runs the packet, transports the output back verbatim; main agent writes it into the B artifact with a cross-model provenance header, then merges by evidence as usual. Honesty markers go in loop-state.md, the contract, the merged plan, and the final report. Full flow and honesty rules: `references/hybrid-dual.md`.
+Two paths: `same_model_auto` (Task subagent, inherits session model, T3+ default) or `cross_model_manual` (TRAE multi-task with different models, high-risk upgrade). Cross-model dual cannot use Task subagents — the manual path packs a task-packet, user transports it to a different model, output returns verbatim. Full flow and honesty rules: `references/hybrid-dual.md`.
 
 ## Stop Rules
 
-- For every T2+ route, define done check, max rounds, budget cap if known, and hard-stop risks before execution.
-- Maximum 2 repair iterations per brief.
-- On the third new P0, write `loop-limit-reached` and stop for user input.
-- Any unresolved P0 blocks final report.
-- P1 must be fixed, deferred with a named reason, or disputed with resolution notes.
-- P2 may ship only if fixed or explicitly deferred.
-- P3 may be recorded without blocking.
-- If two independent reviews both mark the same issue P0 and the main agent cannot disprove it with strong evidence, stop for user decision.
-- Stop or checkpoint when the strategic direction changes, when no new evidence appears after repeated repair, when production/destructive risk appears, or when the route tier no longer matches the task.
-
-Full rules: `references/stop-rules.md`.
-
-## Auto-Iteration
-
-The loop can advance automatically to complete a task with minimal manual intervention, provided TRAE's auto-run setting is ON (Settings > Conversation flow > Auto-run).
-
-**Auto-advance (no pause):** within-phase steps (writing an artifact, running a validator, dispatching a subagent); sequential phase transitions (brief -> dual_plan -> plan_merge -> execution -> ... -> final); subagent dispatch and verbatim write; verification commands; repair iterations within the cap.
-
-**Halt points (must stop, never bypass):** every stop rule in `references/stop-rules.md`; every must-ask checkpoint in `references/user-checkpoints.md`; any blocker, gap marker (`strategy-gap` / `plan-gap` / `loop-limit-reached`), or pending user decision; a required subagent artifact unavailable without prior degraded approval; a `resume-with-gap` from the resume protocol.
-
-The planning->execution boundary is a controlled auto-advance point: auto-advance only when all auto-dispatch conditions in `references/user-checkpoints.md` hold; otherwise stop at the planning closeout. If auto-run is OFF, the loop still runs but each execution step pauses for confirmation. The loop never bypasses a halt point regardless of the auto-run setting. Full rules: `references/auto-iteration.md`.
+Max 2 repair iterations per brief. Third new P0: write `loop-limit-reached` and stop. Any unresolved P0 blocks final report. P1 must be fixed, deferred with reason, or disputed. Two reviews agreeing on P0 without counter-evidence: stop for user decision. Full rules: `references/stop-rules.md`.
 
 ## Evidence Standards
 
-Strong evidence: code `path:line` plus exact symbol; tests with full command and pass/fail count; UI screenshot path plus visual inspection statement; files with path/size/type/checksum; git `git status --short`, branch, staged, commit SHA.
+Strong evidence: `path:line`, full test command with pass/fail count, screenshot path with inspection statement, git state. Weak evidence cannot be the sole basis for `accept`. Every accepted P0 requires strong evidence. `not verified` means unchecked, not correct. Full rules: `references/evidence-standards.md`.
 
-Weak evidence: static UI copy as backend linkage proof; model citations without reopening files; screenshots generated but not inspected; tests that do not execute the changed file.
+## Auto-Iteration
 
-Arbitration hard rules: weak evidence cannot be the sole basis for `accept`; decisions must cite artifact evidence not model identity; every accepted P0 requires strong evidence; `not verified` means unchecked, not correct. Full rules: `references/evidence-standards.md`.
+With TRAE auto-run ON (Settings > Conversation flow > Auto-run), the loop auto-advances through phases, halting only at stop rules, must-ask checkpoints, blockers, and gap markers. If OFF, each step pauses for confirmation. The loop never bypasses a halt point. Full rules: `references/auto-iteration.md`.
 
 ## User Checkpoints
 
 Stop and ask before: multiple plausible product directions; underspecified UX/success criteria; brief/goal changes; `plan-gap`; required subagent artifact missing/empty/malformed; proceeding degraded after a required dual gate; review/arbitration changing scope/architecture; user rejecting a preview direction; two reviews agreeing on P0 without counter-evidence; detected brief drift. Do not ask for ordinary implementation defects, routine test additions, formatting edits, or `third path` small repairs. Auto-dispatch after planning when the user already participated, the plan matches accepted strategy, gates are clean, and no gap remains. Full rules: `references/user-checkpoints.md`.
 
+## Skill Promotion
+
+Promote a repeated loop pattern to a skill only after the stable parts are known. Default threshold: 10+ repeated uses, or fewer when risk/cost is high and the pattern is already stable.
+
+Promotion requires: stable context pack; route trigger; done check; checker or harness when practical; examples or forward tests; known failure modes; stop rules. Do not turn a one-off project lesson into a skill unless it generalizes beyond that project.
+
 ## Roles
 
-Roles are contracts, not fixed titles. Default coding roles: planning, execution, review, arbitration, manager (all owned by the main agent in TRAE; review and plan-B are delegated to subagents at T3+). For non-code projects, map to domain roles (producer, researcher, scriptwriter, editor, QA). Before any roles exist, ask the user to define topology: which roles, parallel vs sequential, whether subagent dual review is wanted, where user intervenes. Full role definitions, independence constraints, hard boundaries, context rules: `references/lane-roles.md`.
-
-Essential constraints:
-- Choose roles by task risk, not habit.
-- After a merged plan exists, batch execution by user-visible workflow state or durable contract, not helper functions.
-- Planning reads broadly; execution reads merged plan + local code/tests; review reads bounded evidence bundle; arbitration reads both reviews + live evidence; manager reads worklog + artifact paths.
-- Reviews stay independent: review-A and review-B do not read each other before arbitration.
-- Arbitration repairs implementation defects inside the merged plan. Return to planning only for plan defects, scope-changing fixes, or user-goal mismatches.
-- Critical direction changes and degraded gates need a user checkpoint.
+Roles are contracts, not fixed titles. Default: planning, execution, review, arbitration, manager (all owned by main agent; review and plan-B delegated to subagents at T3+). Map to domain roles for non-code projects. Choose roles by task risk, not habit. Reviews stay independent. Arbitration repairs implementation defects; return to planning only for plan defects or scope changes. Full role definitions, independence constraints, and context rules: `references/lane-roles.md`.
 
 ## Common Mistakes
 
@@ -293,13 +357,4 @@ Essential constraints:
 - `references/state-feedback-schema.md` — state/feedback/superseding event schema
 - `references/evidence-standards.md` — strong/weak evidence and arbitration hard rules
 - `references/stop-rules.md` — stop rules and repair iteration caps
-- `references/user-checkpoints.md` — when to ask, when not to, auto-dispatch conditions
-- `references/forward-tests.md` — pressure scenarios for validating the skill
-- `references/loop-state-schema.md` — loop-state.md field structure and update rules
-- `references/resume-protocol.md` — cross-session resume steps and gap handling
-- `references/auto-iteration.md` — auto-advance rules, halt points, auto-run setting
-- `references/hybrid-dual.md` — same-model auto dual + cross-model manual upgrade path
-- `scripts/validate-loop-contract.ps1` — contract/merged-plan validator
-- `scripts/validate-loop-state.ps1` — loop-state.md snapshot validator
-- `examples/minimal-refactor/` — a T3 walk-through with subagent prompt samples
-- `examples/resume-walkthrough/` — interrupt-and-resume walk-through
+- `references/user-chec

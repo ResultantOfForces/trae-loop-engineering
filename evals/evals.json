@@ -1,0 +1,232 @@
+{
+  "meta": {
+    "skill": "trae-loop-engineering",
+    "source": "references/forward-tests.md",
+    "description": "Forward-test pressure scenarios for validating the trae-loop-engineering skill. Each prompt is a realistic user message written WITHOUT leaking the expected answer, the bug to expect, or the intended fix. Use these when changing the skill or validating that future agents follow the loop.",
+    "leak_hygiene_meaning": "leak_hygiene=true asserts the prompt obeys leak hygiene (no expected answer, bug, fix, or pass/fail criteria is leaked into the prompt). Every scenario in this set is authored clean, so the value is true for all entries; a grader may assert leak_hygiene===true as a meta-invariant and spot-check that the prompt text does not contain the expected_output's answer.",
+    "scenario_count": 16,
+    "route_tiers_covered": ["T0", "T1", "T2", "T3", "T4", "T5"],
+    "scenarios_15_16_note": "Scenarios 15 (T4 custom role graph conflict) and 16 (T5 skill promotion trigger) are NEW additions beyond the 14 scenarios in references/forward-tests.md, added to cover the T4 and T5 route tiers."
+  },
+  "scenarios": [
+    {
+      "id": 1,
+      "name": "same active loop correction",
+      "prompt": "We were mid-way through refining the trae-loop-engineering skill earlier today. Continue that same work and refine the last edit we made.",
+      "expected_output": "Reuses the existing loop_id and owner role from loop-state.md and continues the active loop, refining the prior skill edit rather than spawning a new loop.",
+      "assertions": [
+        "Reads loop-state.md first before doing anything else.",
+        "Reuses the existing loop_id (does not generate a new one).",
+        "Reuses the existing owner role for the work.",
+        "Does NOT create a new loop without evidence.",
+        "Appends a state/resume event to the worklog if the resume or correction is recorded."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 2,
+      "name": "skill/process edit route",
+      "prompt": "Update the lane-roles reference so that review subagents must record a confidence level on each finding. This changes how future review agents behave.",
+      "expected_output": "Routes the skill/process edit through Planning -> Plan Review -> Execution -> Review, because it changes future agent behavior; does not treat it as a tiny docs fix or skip Plan Review.",
+      "assertions": [
+        "Routes the work through Planning, then Plan Review, then Execution, then Review.",
+        "Does NOT treat it as a T0/T1 tiny docs fix.",
+        "Does NOT skip the Plan Review phase.",
+        "Recognizes the edit changes future agent behavior and justifies the heavier route."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 3,
+      "name": "planning-execution boundary",
+      "prompt": "I'm in the planning phase of the auth refactor loop. The plan draft looks good so far, so continue.",
+      "expected_output": "Continues planning; does not start editing implementation files. The planning role stays behind the planning-execution firewall.",
+      "assertions": [
+        "Continues planning-artifact work (revises or extends the plan).",
+        "Does NOT modify production source, implementation files, tests, package/config files, or runtime scripts.",
+        "Does NOT self-promote from planning into execution.",
+        "Interprets 'continue' as continue-planning, not execute."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 4,
+      "name": "subagent independence",
+      "prompt": "This is a T3 refactor of the payment reconciliation module. Get an independent second plan before we execute.",
+      "expected_output": "Dispatches a plan-B subagent whose Task prompt contains only the brief/context pack, never plan-A or any main-agent conclusion; the review-B prompt (if dispatched) contains no review-A.",
+      "assertions": [
+        "The plan-B Task prompt contains the brief and context pack.",
+        "The plan-B Task prompt does NOT contain plan-A or any main-agent conclusion.",
+        "If review subagents are dispatched, the review-B prompt does NOT contain review-A.",
+        "The main agent is the first role allowed to compare A and B (as merger).",
+        "Includes an independence declaration in the subagent prompt."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 5,
+      "name": "not_needed stays lightweight",
+      "prompt": "Fix the typo in the README contact link and bump the worklog date.",
+      "expected_output": "Uses a compact subagent_policy: not_needed with a short reason and no heavy subagent block; does not dispatch a subagent ceremonially.",
+      "assertions": [
+        "Sets subagent_policy: not_needed with a one-line reason.",
+        "Does NOT dispatch a subagent for the trivial fix.",
+        "Does NOT require the full required/conditional policy fields."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 6,
+      "name": "conditional skip",
+      "prompt": "While implementing the cache invalidation slice, there's one helper where the retry semantics aren't obvious. Handle it appropriately.",
+      "expected_output": "Either consults a subagent or records 'subagent skipped: <reason>'; does not silently skip the subagent after marking the policy conditional.",
+      "assertions": [
+        "Either dispatches a subagent OR writes an explicit 'subagent skipped: <reason>' marker.",
+        "Does NOT silently skip the subagent after marking policy conditional.",
+        "If skipped, the reason is recorded and is concrete."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 7,
+      "name": "artifact-first handoff",
+      "prompt": "The merged plan is ready. Hand off to execution.",
+      "expected_output": "Handoff points to artifact paths and a compact summary; does not re-expand the full plan in chat or omit source artifacts.",
+      "assertions": [
+        "The handoff references artifact paths (e.g. 12-plan-merged.md).",
+        "The handoff includes a compact summary, read requirements, boundaries, and exit criteria.",
+        "Does NOT re-expand the full plan body into the chat message.",
+        "Does NOT send an unstructured 'continue' message."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 8,
+      "name": "subagent artifact validation",
+      "prompt": "The review subagent just came back. Process its output and proceed with the review phase.",
+      "expected_output": "If the returned output is missing the required ## Findings heading, marks 'review-unavailable: malformed-output', does not accept it as review evidence, and retries once with a stricter packet or stops for a checkpoint.",
+      "assertions": [
+        "Checks the returned output for the required ## Findings (and other required) headings.",
+        "If malformed, writes a 'review-unavailable: malformed-output' (or equivalent unavailable) marker.",
+        "Does NOT accept malformed output as valid review evidence.",
+        "Either retries once with a stricter packet OR stops for a user checkpoint.",
+        "Does NOT pretend the subagent reviewed when the output is unusable."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 9,
+      "name": "stop rules",
+      "prompt": "During the second repair pass a third new P0 just showed up in the review. Deal with it.",
+      "expected_output": "Writes 'loop-limit-reached' and stops for user input; does not continue repairing past the cap or write the final report with an unresolved P0.",
+      "assertions": [
+        "Writes a 'loop-limit-reached' gap marker (and adds it to open_gaps).",
+        "Stops for user input rather than continuing past the 2-repair cap.",
+        "Sets loop_status to blocked/limit_reached appropriately.",
+        "Does NOT write the final report with an unresolved P0.",
+        "Does NOT continue repairing past the cap."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 10,
+      "name": "verbatim write",
+      "prompt": "The plan-B subagent returned its plan. Write it into the artifact.",
+      "expected_output": "Writes the subagent output verbatim into 11-plan-B.md with only a provenance header; does not edit, summarize, compress, or 'clean up' the output.",
+      "assertions": [
+        "Writes the output into 11-plan-B.md verbatim.",
+        "Adds only a provenance header (source / subagent_id / dispatch time).",
+        "Does NOT edit, summarize, compress, reorder, or 'clean up' the subagent output.",
+        "Any formatting issues are recorded as appended notes, not by rewriting the body."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 11,
+      "name": "resume clean",
+      "prompt": "resume loop 2026-06-28-auth-async-await",
+      "expected_output": "Reads loop-state.md first, reuses the loop_id, classifies the resume as clean (no blockers/gaps), and continues from next_action.",
+      "assertions": [
+        "Reads loop-state.md first.",
+        "Reuses the existing loop_id (2026-06-28-auth-async-await).",
+        "Classifies the resume as clean (no blockers, no open_gaps).",
+        "Continues from next_action.",
+        "Increments resume_count and appends a resume event to the worklog.",
+        "Does NOT start a new loop or recover state from chat history."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 12,
+      "name": "resume-with-gap",
+      "prompt": "resume loop 2026-06-28-payment-recon",
+      "expected_output": "Classifies the resume as resume-with-gap (loop-state.md carries open_gaps: [plan-gap]), stops for a checkpoint, and does not auto-advance into execution.",
+      "assertions": [
+        "Reads loop-state.md and detects open_gaps containing plan-gap.",
+        "Classifies the resume as resume-with-gap (not clean).",
+        "Stops for a user checkpoint rather than auto-advancing.",
+        "Does NOT continue execution while the gap is open.",
+        "Does NOT ignore the gap marker."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 13,
+      "name": "auto-iteration halt",
+      "prompt": "Auto-run is on and the loop is advancing. The dual review just concluded that the scope should expand to cover the settlement layer as well.",
+      "expected_output": "Stops at the must-ask checkpoint and asks the user before proceeding; does not bypass the checkpoint because auto-run is enabled.",
+      "assertions": [
+        "Recognizes the review changing scope/architecture as a must-ask checkpoint.",
+        "Stops and asks the user before proceeding.",
+        "Does NOT bypass the checkpoint because auto-run is enabled.",
+        "Does NOT auto-advance the planning->execution boundary when the scope has changed."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 14,
+      "name": "cross-model dual honesty",
+      "prompt": "This auth migration is high-risk. I want a second opinion from a different model family before we execute, so escalate to cross-model dual.",
+      "expected_output": "Records dual_mode: cross_model_manual in loop-state.md and the final report; the task-packet artifact exists and contains no plan-A; plan-B is written verbatim with a cross-model provenance header that names the model.",
+      "assertions": [
+        "Records dual_mode: cross_model_manual in loop-state.md.",
+        "Records dual_mode: cross_model_manual in 50-final-report.md.",
+        "A task-packet artifact exists and does NOT contain plan-A or any main-agent conclusion.",
+        "plan-B is written verbatim into 11-plan-B.md with a cross-model provenance header that names the model.",
+        "subagent_dispatches for the plan-B/review entry has status unavailable or is absent (transported, not dispatched).",
+        "Does NOT pretend it was an automatic subagent dual."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 15,
+      "name": "T4 custom role graph conflict",
+      "prompt": "We're running a T4 loop on the platform migration with parallel roles: a data-migration role and a schema role. Their execution reports both modified docs/contracts/index.ts and now conflict. Resolve the role-graph conflict and get the loop unstuck.",
+      "expected_output": "Detects the conflict stems from overlapping write_scope between two roles in the custom role graph, respects each role's write_scope boundary, routes the conflict by defect type per repair-routing (contract/scope change -> planning; implementation defect -> arbitration), updates loop-state.md to block or raises a user checkpoint, and resolves by artifact evidence rather than role preference.",
+      "assertions": [
+        "Detects that the conflict stems from overlapping write_scope between two roles in the custom role graph.",
+        "Respects role write_scope boundaries; does NOT silently have one role overwrite another role's artifact.",
+        "Routes the conflict by defect type per lane-roles repair routing (contract/scope change -> planning; implementation defect -> arbitration).",
+        "Updates loop-state.md (blocker / loop_status) OR raises a user checkpoint if the conflict changes scope, strategy, or data contract.",
+        "The resolution cites artifact evidence (path:line / diff), not role identity preference.",
+        "Does NOT silently pick one role's output and discard the other without evidence."
+      ],
+      "leak_hygiene": true
+    },
+    {
+      "id": 16,
+      "name": "T5 skill promotion trigger",
+      "prompt": "This is the fourth time this quarter we've run the same dependency-audit-and-bump loop by hand, and each time someone forgets the stop-rule check. Turn this recurring workflow into a reusable skill with a trigger and a stop-rule checker.",
+      "expected_output": "Recognizes the recurring pattern as T5 (skill promotion), defines a harness/checker and a trigger condition plus stop rules, scaffolds the reusable skill referencing loop-engineering stop rules and capture requirements, and pauses for a user checkpoint before promoting or archiving (critical direction change).",
+      "assertions": [
+        "Classifies the route as T5 (skill promotion), not a one-off T0 task.",
+        "Defines a trigger condition describing when the skill should run (the recurring pattern).",
+        "Defines a stop-rule checker / harness (max rounds, P0 cap, budget).",
+        "The new skill references the loop-engineering stop rules and capture requirements.",
+        "Stops for a user checkpoint before auto-promoting or auto-archiving (does not silently promote).",
+        "Does NOT just run the workflow once more as a one-off without capturing the reusable harness."
+      ],
+      "leak_hygiene": true
+    }
+  ]
+}

@@ -27,11 +27,12 @@
       "id": 2,
       "name": "skill/process edit route",
       "prompt": "Update the lane-roles reference so that review subagents must record a confidence level on each finding. This changes how future review agents behave.",
-      "expected_output": "Routes the skill/process edit through Planning -> Plan Review -> Execution -> Review, because it changes future agent behavior; does not treat it as a tiny docs fix or skip Plan Review.",
+      "expected_output": "Routes the skill/process edit through the full 8-phase model (Brief \u2192 Dual Plan \u2192 Plan Merge \u2192 Execution \u2192 Execution Report \u2192 Dual Review \u2192 Arbitration \u2192 Final Report), because it changes future agent behavior; does not treat it as a tiny docs fix or skip Plan Merge or Dual Review.",
       "assertions": [
-        "Routes the work through Planning, then Plan Review, then Execution, then Review.",
+        "Routes the work through Brief \u2192 Dual Plan \u2192 Plan Merge \u2192 Execution \u2192 Execution Report \u2192 Dual Review \u2192 Arbitration \u2192 Final Report (8-phase model).",
         "Does NOT treat it as a T0/T1 tiny docs fix.",
-        "Does NOT skip the Plan Review phase.",
+        "Does NOT skip the Plan Merge phase.",
+        "Does NOT skip the Dual Review phase.",
         "Recognizes the edit changes future agent behavior and justifies the heavier route."
       ],
       "leak_hygiene": true

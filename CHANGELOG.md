@@ -15,19 +15,35 @@ Version bumps follow the impact of a change, not a calendar:
 
 ## [Unreleased]
 
-### [1.1.0] - Unreleased — Deep Optimization
+## [1.1.0] - 2026-06-29 — Deep Optimization
 
-#### Added
+### Added
 - `assets/` directory with fillable templates: `loop-state-template.md`, `brief-template.md`, `contract-template.md`, `task-packet-template.md`.
 - `evals/evals.json` — machine-readable forward-test scenarios (14 ported from `references/forward-tests.md` + 2 new scenarios for the T4 and T5 route tiers), each with verifiable assertions and a `leak_hygiene` flag.
-- Frontmatter compliance checks for skill metadata.
+- Frontmatter compliance: `license`, `compatibility`, `metadata` (version, min-trae-version, tags), `allowed-tools` fields per agentskills.io spec.
 - Cross-platform validation scripts (PowerShell + Python 3.8+): `scripts/validate-loop-contract.{ps1,py}`, `scripts/validate-loop-state.{ps1,py}`.
-- Method completeness coverage for all eight loop phases and the full six-interface contract.
-- Deeper TRAE integration notes (Task subagent model constraint, auto-run prerequisite, cross-session resume).
+- SKILL.md Table of Contents (25 entries).
+- Method chapters: Admission Gates, Execution Batch Sizing, Skill Promotion (expanded), Quick Arbitration Output.
+- TRAE Memory, Rules, and MCP Integration chapter.
+- Table of Contents added to 6 reference files (>100 lines): `lane-roles.md`, `subagent-dispatch.md`, `user-checkpoints.md`, `loop-state-schema.md`, `state-feedback-schema.md`, `resume-protocol.md`.
+- Automation Guidance section in `references/forward-tests.md`.
+- `CHANGELOG.md` following Keep a Changelog format.
+- `README.md` Option D (.agents/skills/ path), Versioning section.
 
-#### Changed
+### Changed
+- SKILL.md description simplified from 1019 to ~785 characters (removed redundant "Appropriate for..." paragraph).
+- 7 SKILL.md sections compressed to summary + trigger format (Subagent Dual, Hybrid Dual, Stop Rules, Evidence Standards, Auto-Iteration, User Checkpoints, Roles).
+- All PowerShell references updated to dual-platform format (PowerShell + Python 3.8+) across 10 files.
+- README.md TRAE Work UI path fixed: "Settings > Skills & Commands" → "left sidebar → Skills (技能) → Installed tab".
+- README.md Layout updated to include `assets/`, `evals/`, `CHANGELOG.md`, and dual-platform scripts.
+- Forward-test scenario 2 aligned to 8-phase model (Brief → Dual Plan → Plan Merge → Execution → Execution Report → Dual Review → Arbitration → Final Report).
 - Forward-test scenarios converted from prose into structured, machine-readable JSON with `leak_hygiene` flags and explicit assertions.
 - Reduced redundancy across references (deduplicated evidence, dispatch, and dual rules).
+
+### Fixed
+- P2-2: `validate-loop-state.ps1` now validates `subagent_policy` (not_needed/conditional/required) and `route_tier` (T0-T5) enum values.
+- P3-1: `validate-loop-state.ps1` redundant blockers condition (duplicate `[]` check) replaced with checks for `none` and empty string.
+- P3-4: `Has-Key` / `has` token matcher regex fixed in all four validators (`validate-loop-contract.{ps1,py}`, `validate-loop-state.{ps1,py}`) — keys at start/end of normalized text now match.
 
 ## [1.0.0] - 2026-06-28
 

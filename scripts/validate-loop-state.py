@@ -16,6 +16,9 @@ Fixes versus the PowerShell original:
         `$blockersLine -ne '[]' -and ($blockersLine -ne '[]')` (a duplicate);
         the second clause now also excludes the values 'none' and '' so that
         an explicitly-empty blockers list is not treated as "has blockers".
+  P3-4  The has() token matcher now uses (?:^|_)key(?:_|$) instead of
+        (?:^|_)key_, so a key occurring at the very start or end of the
+        normalized text is still detected.
 
 Exit codes:
   0  validation ok
@@ -36,11 +39,12 @@ from pathlib import Path
 def has(text, key):
     """Return True if the normalized text contains ``key`` as a token.
 
-    Mirrors the PowerShell Has helper: matches ``(?:^|_)key_`` on the
-    already-normalized (lowercased, underscore-collapsed) text.
+    Mirrors the PowerShell Has helper, with the P3-4 fix: the match pattern
+    is ``(?:^|_)key(?:_|$)`` instead of ``_key_`` so that keys at the
+    start or end of the normalized text are still detected.
     """
     k = re.sub(r'[^a-z0-9]+', '_', key)
-    return re.search(r'(?:^|_)' + re.escape(k) + r'_', text) is not None
+    return re.search(r'(?:^|_)' + re.escape(k) + r'(?:_|$)', text) is not None
 
 
 def get_val(text, key):

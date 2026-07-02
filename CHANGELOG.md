@@ -15,6 +15,15 @@ Version bumps follow the impact of a change, not a calendar:
 
 ## [Unreleased]
 
+### Added
+- TRAE IDE compatibility: `trae-ide` added to frontmatter `compatibility` list.
+- `SearchReplace` added to `allowed-tools` for TRAE IDE (Edit equivalent).
+- README.md: TRAE IDE installation instructions (global `builtin_skills` path + project-level) and SOLO mode usage notes.
+
+### Changed
+- README.md Install section restructured to cover both TRAE IDE and TRAE Work with platform-specific paths.
+- README.md auto-run Settings paths updated to show both TRAE IDE and TRAE Work navigation.
+
 ## [1.1.0] - 2026-06-29 — Deep Optimization
 
 ### Added

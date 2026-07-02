@@ -27,7 +27,7 @@ Three TRAE behaviors shape this skill:
 
 1. **Subagent = Task tool, inherits session model.** Same-model dual plan/review can be automated; cross-model dual cannot — it needs manual multi-task transport (see `references/hybrid-dual.md`).
 2. **New session clears context.** Only files survive across sessions, so loop memory lives in `loop-state.md` + `worklog.md` + artifacts, and a Resume Protocol reconstructs state on restart (see `references/resume-protocol.md`).
-3. **Auto-run setting is the prerequisite for auto-iteration.** Enable it in Settings > Conversation flow > Auto-run so the loop can advance without per-step confirmation (see `references/auto-iteration.md`).
+3. **Auto-run setting is the prerequisite for auto-iteration.** Enable it in TRAE IDE (Settings → Conversation flow → Auto-run) or TRAE Work (left sidebar → Settings → Conversation flow → Auto-run) so the loop can advance without per-step confirmation (see `references/auto-iteration.md`).
 
 ## Core capabilities
 
@@ -43,23 +43,25 @@ Three TRAE behaviors shape this skill:
 
 ## Install
 
-### Option A — Global skill (recommended)
+### TRAE IDE (Windows / macOS)
 
-Copy this folder to the TRAE global skills directory so that `SKILL.md` lives at:
+#### Option A — Global skill (recommended)
+
+Copy this folder to the TRAE IDE built-in skills directory so that `SKILL.md` lives at:
 
 ```
-%userprofile%\.trae-cn\skills\trae-loop-engineering\SKILL.md
+%userprofile%\.trae-cn\builtin_skills\trae-loop-engineering\SKILL.md
 ```
 
 PowerShell one-liner (run from the parent of this folder):
 
 ```powershell
-Copy-Item -Recurse -Force '.\trae-loop-engineering' "$env:USERPROFILE\.trae-cn\skills\trae-loop-engineering"
+Copy-Item -Recurse -Force '.\trae-loop-engineering' "$env:USERPROFILE\.trae-cn\builtin_skills\trae-loop-engineering"
 ```
 
-Then in TRAE: Settings > Skills & Commands, confirm `trae-loop-engineering` appears in the Global tab and is enabled.
+Restart TRAE IDE. The skill `trae-loop-engineering` will appear in the Skill list and be available in SOLO mode.
 
-### Option B — Project skill
+#### Option B — Project skill
 
 Copy this folder into your project so that `SKILL.md` lives at:
 
@@ -73,9 +75,31 @@ PowerShell (run from your project root):
 Copy-Item -Recurse -Force '<path-to>\trae-loop-engineering' '.\.trae\skills\trae-loop-engineering'
 ```
 
-### Option C — Import as zip
+### TRAE Work
 
-In TRAE: Settings > Skills & Commands > Create > import a `SKILL.md` or a `.zip` containing this folder.
+#### Option A — Global skill (recommended)
+
+Copy this folder to the TRAE global skills directory so that `SKILL.md` lives at:
+
+```
+%userprofile%\.trae-cn\skills\trae-loop-engineering\SKILL.md
+```
+
+PowerShell one-liner (run from the parent of this folder):
+
+```powershell
+Copy-Item -Recurse -Force '.\trae-loop-engineering' "$env:USERPROFILE\.trae-cn\skills\trae-loop-engineering"
+```
+
+Then in TRAE Work: left sidebar → Skills (技能) → Installed tab, confirm `trae-loop-engineering` appears and is enabled.
+
+#### Option B — Project skill
+
+(Same as TRAE IDE Option B above)
+
+#### Option C — Import as zip
+
+In TRAE Work: left sidebar → Skills (技能) → Create > import a `SKILL.md` or a `.zip` containing this folder.
 
 ## Quick start
 
@@ -83,7 +107,7 @@ After install, trigger the skill in chat, for example:
 
 > Use loop engineering to refactor `src/auth/login.ts` from callbacks to async/await, preserving the public API and the 401-retry behavior.
 
-The main agent will: choose a route tier (likely T3) → write a brief → write plan-A → dispatch a plan-B subagent → merge → execute → dispatch two review subagents → arbitrate → final report. Artifacts land under `docs/loop-engineering/YYYY-MM-DD-slug/`. For long tasks, enable TRAE auto-run (Settings > Conversation flow > Auto-run) so the loop auto-iterates. If interrupted, resume with `resume loop <loop_id>` in a new session — the agent reads `loop-state.md` first and continues.
+The main agent will: choose a route tier (likely T3) → write a brief → write plan-A → dispatch a plan-B subagent → merge → execute → dispatch two review subagents → arbitrate → final report. Artifacts land under `docs/loop-engineering/YYYY-MM-DD-slug/`. For long tasks, enable TRAE auto-run (TRAE IDE: Settings → Conversation flow → Auto-run; TRAE Work: left sidebar → Settings → Conversation flow → Auto-run) so the loop auto-iterates. If interrupted, resume with `resume loop <loop_id>` in a new session — the agent reads `loop-state.md` first and continues.
 
 For a full walk-through with subagent prompt samples, see `examples/minimal-refactor/README.md`. For an interrupt-and-resume example, see `examples/resume-walkthrough/README.md`.
 

@@ -5,6 +5,7 @@ license: MIT
 compatibility:
   - trae-work
   - trae-cli
+  - trae-ide
 metadata:
   version: 1.1.0
   min-trae-version: "2025.1"
@@ -19,6 +20,7 @@ allowed-tools:
   - Read
   - Write
   - Edit
+  - SearchReplace
   - Grep
   - Glob
   - RunCommand
